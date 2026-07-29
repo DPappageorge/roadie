@@ -115,10 +115,6 @@
 
   /* ---------- COVER ---------- */
   .cover { justify-content: flex-end; min-height: 100svh; }
-  .cover-canvas-wrap {
-    position: absolute; inset: 0; overflow: hidden;
-  }
-  #waveform { width: 100%; height: 100%; display: block; }
   .cover-top {
     display: flex; justify-content: space-between; align-items: flex-start;
     font-size: 0.72rem; color: var(--muted); text-transform: uppercase;
@@ -280,14 +276,13 @@
 <div class="deck">
 
   <section class="slide cover">
-    <div class="cover-canvas-wrap"><canvas id="waveform"></canvas></div>
     <div class="cover-top">
       <span>Concept Dossier — Rev. 3</span>
       <span class="mono">Rev. 2026.07.28</span>
     </div>
     <div class="cover-body">
       <span class="codename">Roadie</span>
-      <h1 class="cover-title">An always-on marketing agent for independent musicians</h1>
+      <h1 class="cover-title">A 24/7 marketing agent for independent musicians</h1>
       <p class="cover-sub">Introducing Roadie: a lifelong marketing agent, owned and operated by you. Not just a dashboard to check — a team member you talk to, working around the clock for as long as the career runs.</p>
     </div>
     <div class="cover-foot">
@@ -519,54 +514,6 @@
   </section>
 
 </div>
-
-<script>
-  (function () {
-    var canvas = document.getElementById('waveform');
-    if (!canvas) return;
-    var ctx = canvas.getContext('2d');
-
-    function accentColor() {
-      return getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#A8672B';
-    }
-
-    function draw() {
-      var dpr = window.devicePixelRatio || 1;
-      var rect = canvas.getBoundingClientRect();
-      canvas.width = Math.max(1, rect.width * dpr);
-      canvas.height = Math.max(1, rect.height * dpr);
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      var w = rect.width, h = rect.height;
-      ctx.clearRect(0, 0, w, h);
-      var mid = h * 0.62;
-      var color = accentColor();
-
-      ctx.strokeStyle = color;
-      ctx.globalAlpha = 0.22;
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(0, mid);
-      ctx.lineTo(w, mid);
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.globalAlpha = 0.4;
-      ctx.lineWidth = 1.25;
-      for (var x = 0; x <= w; x += 2) {
-        var t = x / w;
-        var y = mid
-          + Math.sin(t * 26 + 0.5) * h * 0.075
-          + Math.sin(t * 71 + 1.7) * h * 0.035
-          + Math.sin(t * 13.3) * h * 0.11;
-        if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-      }
-      ctx.stroke();
-    }
-
-    draw();
-    window.addEventListener('resize', draw);
-  })();
-</script>
 
 </body>
 </html>
