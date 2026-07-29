@@ -1,0 +1,572 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Roadie — An Always-On Marketing Agent for Independent Musicians</title>
+<style>
+  :root {
+    --bg: #F3EEE4;
+    --bg-raised: #EAE2D2;
+    --fg: #211A14;
+    --muted: #5B5044;
+    --accent: #A8672B;
+    --risk: #A13F28;
+    --gate: #3E6478;
+    --open: #6C5E85;
+    --rule: rgba(33,26,20,0.16);
+    --rule-strong: rgba(33,26,20,0.32);
+
+    --font-display: 'Futura', 'Avenir Next Condensed', 'Avenir Next', 'Century Gothic', 'Arial Narrow', sans-serif;
+    --font-body: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
+    --font-mono: 'SF Mono', 'Menlo', 'Consolas', ui-monospace, monospace;
+  }
+
+  /* Committed to light mode by design — dark mode only if the viewer explicitly toggles it. */
+  :root[data-theme="dark"] {
+    --bg: #1A1512;
+    --bg-raised: #241D18;
+    --fg: #F1EAD9;
+    --muted: #B8AB98;
+    --accent: #D89B4A;
+    --risk: #D9694C;
+    --gate: #7FA5B8;
+    --open: #A79BC2;
+    --rule: rgba(241,234,217,0.16);
+    --rule-strong: rgba(241,234,217,0.30);
+  }
+  :root[data-theme="light"] {
+    --bg: #F3EEE4;
+    --bg-raised: #EAE2D2;
+    --fg: #211A14;
+    --muted: #5B5044;
+    --accent: #A8672B;
+    --risk: #A13F28;
+    --gate: #3E6478;
+    --open: #6C5E85;
+    --rule: rgba(33,26,20,0.16);
+    --rule-strong: rgba(33,26,20,0.32);
+  }
+
+  * { box-sizing: border-box; }
+  html, body {
+    background: var(--bg);
+    color: var(--fg);
+    overflow-x: hidden;
+  }
+  body {
+    font-family: var(--font-body);
+    font-size: 1rem;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3 { text-wrap: balance; font-weight: 700; margin: 0; }
+  p { margin: 0; }
+
+  .eyebrow, .mono, .tag, .idx {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.06em;
+  }
+
+  .deck { max-width: 1180px; margin: 0 auto; }
+
+  .slide {
+    min-height: 100vh;
+    padding: clamp(2rem, 6vw, 4.5rem) clamp(1.25rem, 6vw, 5rem);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: clamp(1.25rem, 3vw, 2rem);
+    border-bottom: 1px solid var(--rule);
+    position: relative;
+  }
+
+  .slide-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding-bottom: 0.85rem;
+    border-bottom: 1px solid var(--rule);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .slide-head .idx { color: var(--accent); }
+
+  .display-title {
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    letter-spacing: 0.005em;
+    line-height: 1.04;
+    font-size: clamp(1.9rem, 4.6vw, 3.4rem);
+    max-width: 18ch;
+  }
+
+  .lede {
+    font-size: clamp(1.05rem, 1.6vw, 1.2rem);
+    max-width: 60ch;
+    color: var(--fg);
+  }
+  .lede.muted { color: var(--muted); }
+
+  .body-copy { max-width: 62ch; font-size: 1.02rem; color: var(--fg); }
+  .body-copy + .body-copy { margin-top: 0.9rem; }
+
+  /* ---------- COVER ---------- */
+  .cover { justify-content: flex-end; min-height: 100svh; }
+  .cover-canvas-wrap {
+    position: absolute; inset: 0; overflow: hidden;
+  }
+  #waveform { width: 100%; height: 100%; display: block; }
+  .cover-top {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    font-size: 0.72rem; color: var(--muted); text-transform: uppercase;
+    position: relative; z-index: 1;
+  }
+  .cover-body { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 1.1rem; }
+  .codename {
+    font-family: var(--font-mono); font-size: 1rem; letter-spacing: 0.16em;
+    color: var(--accent); text-transform: uppercase;
+  }
+  .cover-title {
+    font-family: var(--font-display); text-transform: uppercase;
+    font-size: clamp(2.4rem, 8vw, 5.4rem); line-height: 0.98; letter-spacing: 0.002em;
+    max-width: 16ch;
+  }
+  .cover-sub { max-width: 52ch; font-size: clamp(1.05rem, 2vw, 1.3rem); color: var(--muted); }
+  .cover-foot {
+    display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+    font-size: 0.7rem; color: var(--muted); text-transform: uppercase;
+    border-top: 1px solid var(--rule); padding-top: 0.9rem; position: relative; z-index: 1;
+  }
+
+  /* ---------- generic grid helpers ---------- */
+  .two-col {
+    display: grid; grid-template-columns: 1fr 1fr; gap: clamp(1.25rem, 3vw, 3rem);
+  }
+  @media (max-width: 760px) { .two-col { grid-template-columns: 1fr; } }
+
+  .three-strip {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem;
+  }
+  @media (max-width: 760px) { .three-strip { grid-template-columns: 1fr; } }
+
+  .strip-item { border-top: 2px solid var(--accent); padding-top: 0.75rem; }
+  .strip-item .tag { color: var(--accent); font-size: 0.72rem; }
+  .strip-item h3 { font-family: var(--font-display); text-transform: uppercase; font-size: 1.05rem; margin: 0.4rem 0 0.5rem; }
+  .strip-item p { color: var(--muted); font-size: 0.94rem; }
+
+  .two-strip {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem;
+  }
+  @media (max-width: 760px) { .two-strip { grid-template-columns: 1fr; } }
+
+  /* ---------- thesis statement ---------- */
+  .thesis-quote {
+    font-family: var(--font-body);
+    font-size: clamp(1.35rem, 2.6vw, 1.9rem);
+    line-height: 1.35;
+    max-width: 34ch;
+    color: var(--fg);
+    padding-left: 1.25rem;
+    border-left: 3px solid var(--accent);
+  }
+  .thesis-quote cite {
+    display: block; font-style: normal; font-family: var(--font-mono);
+    font-size: 0.68rem; color: var(--muted); text-transform: uppercase; margin-top: 0.9rem;
+  }
+  .promise-major {
+    margin-top: 0.25rem; padding-top: 1.5rem; border-top: 2px solid var(--accent);
+    display: flex; flex-direction: column; gap: 0.9rem;
+  }
+  .promise-major .statement {
+    font-family: var(--font-display); text-transform: uppercase;
+    font-size: clamp(1.5rem, 3.2vw, 2.2rem); line-height: 1.15; color: var(--accent); max-width: 24ch;
+  }
+  .promise-major p { color: var(--fg); font-size: 1rem; max-width: 62ch; }
+  .promise-major p.muted { color: var(--muted); }
+
+  /* ---------- pools diagram ---------- */
+  .pools {
+    display: flex; align-items: center; justify-content: center; gap: clamp(1rem, 4vw, 2.5rem);
+    flex-wrap: wrap; padding: 1rem 0;
+  }
+  .pool-circle {
+    width: clamp(150px, 22vw, 210px); height: clamp(150px, 22vw, 210px);
+    border-radius: 50%; border: 1.5px solid var(--rule-strong);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; gap: 0.35rem; padding: 1rem; flex-shrink: 0;
+  }
+  .pool-circle.a { border-color: var(--accent); }
+  .pool-circle .pool-tag { font-family: var(--font-mono); font-size: 0.68rem; color: var(--muted); text-transform: uppercase; }
+  .pool-circle .pool-name { font-family: var(--font-display); font-size: 1.05rem; text-transform: uppercase; }
+  .pool-arrow {
+    display: flex; flex-direction: column; align-items: center; gap: 0.4rem; color: var(--muted);
+    font-family: var(--font-mono); font-size: 0.66rem; text-transform: uppercase; max-width: 15ch; text-align: center;
+  }
+  .pool-arrow svg { width: 70px; height: 16px; }
+
+  .pool-jobs { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 0.5rem; }
+  @media (max-width: 760px) { .pool-jobs { grid-template-columns: 1fr; } }
+  .pool-job { padding-top: 0.6rem; border-top: 1px solid var(--rule); }
+  .pool-job .k { font-family: var(--font-mono); font-size: 0.7rem; color: var(--accent); text-transform: uppercase; }
+  .pool-job p { color: var(--muted); font-size: 0.92rem; margin-top: 0.3rem; }
+
+  /* ---------- signal chain ---------- */
+  .chain { display: flex; gap: 0; overflow-x: auto; padding-bottom: 0.5rem; }
+  .chain-stage {
+    flex: 1 1 0; min-width: 158px; padding: 1rem 1.1rem 1rem 0;
+    border-right: 1px dashed var(--rule-strong);
+    display: flex; flex-direction: column; gap: 0.5rem;
+  }
+  .chain-stage:last-child { border-right: none; }
+  .chain-stage .k { font-family: var(--font-mono); font-size: 0.66rem; color: var(--accent); text-transform: uppercase; }
+  .chain-stage h3 { font-family: var(--font-display); font-size: 0.95rem; text-transform: uppercase; }
+  .chain-stage p { font-size: 0.85rem; color: var(--muted); }
+
+  /* ---------- decisions ledger ---------- */
+  .ledger { display: flex; flex-direction: column; }
+  .ledger-row {
+    display: grid; grid-template-columns: 118px 1fr; gap: 1.25rem;
+    padding: 1.05rem 0; border-top: 1px solid var(--rule);
+  }
+  .ledger-row:last-child { border-bottom: 1px solid var(--rule); }
+  @media (max-width: 620px) { .ledger-row { grid-template-columns: 1fr; gap: 0.5rem; } }
+  .tag-stack { display: flex; flex-direction: column; gap: 0.4rem; }
+  .tag {
+    display: inline-block; font-size: 0.66rem; padding: 0.24rem 0.5rem; border-radius: 2px;
+    text-transform: uppercase; height: fit-content; border: 1px solid; white-space: nowrap; width: fit-content;
+  }
+  .tag.structural { color: var(--risk); border-color: var(--risk); background: color-mix(in srgb, var(--risk) 14%, var(--bg)); }
+  .tag.gate { color: var(--gate); border-color: var(--gate); background: color-mix(in srgb, var(--gate) 16%, var(--bg)); }
+  .tag.open { color: var(--open); border-color: var(--open); background: color-mix(in srgb, var(--open) 16%, var(--bg)); }
+  .tag.resolved { color: var(--accent); border-color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, var(--bg)); }
+  .ledger-body h3 { font-family: var(--font-display); text-transform: uppercase; font-size: 1.02rem; margin-bottom: 0.4rem; }
+  .ledger-body p { color: var(--muted); font-size: 0.93rem; max-width: 62ch; }
+  .ledger-body .decision-k { font-family: var(--font-mono); font-size: 0.66rem; color: var(--accent); text-transform: uppercase; display: block; margin-top: 0.65rem; }
+  .ledger-body .decision-p { color: var(--fg); font-size: 0.93rem; max-width: 62ch; margin-top: 0.35rem; }
+  .ledger-body .logged { font-family: var(--font-mono); font-size: 0.66rem; color: var(--muted); opacity: 0.75; display: block; margin-top: 0.6rem; text-transform: uppercase; }
+
+  /* ---------- roadmap ---------- */
+  .phases { display: flex; flex-direction: column; }
+  .phase { display: grid; grid-template-columns: 90px 1fr; gap: 1.25rem; padding: 1rem 0; border-top: 1px solid var(--rule); }
+  .phase:last-child { border-bottom: 1px solid var(--rule); }
+  @media (max-width: 620px) { .phase { grid-template-columns: 1fr; gap: 0.35rem; } }
+  .phase .pnum { font-family: var(--font-mono); color: var(--accent); font-size: 0.85rem; }
+  .phase h3 { font-family: var(--font-display); text-transform: uppercase; font-size: 1rem; margin-bottom: 0.3rem; }
+  .phase p { color: var(--muted); font-size: 0.92rem; max-width: 60ch; }
+
+  /* ---------- closing ---------- */
+  .questions { display: flex; flex-direction: column; gap: 0.75rem; margin: 0.5rem 0 1.5rem; }
+  .questions li { list-style: none; padding-left: 1.4rem; position: relative; color: var(--fg); font-size: 1.02rem; max-width: 58ch; }
+  .questions li::before { content: "—"; position: absolute; left: 0; color: var(--accent); }
+  .closing-line {
+    font-family: var(--font-display); text-transform: uppercase; font-size: clamp(1.3rem, 3vw, 2rem);
+    max-width: 22ch; line-height: 1.15; color: var(--accent);
+  }
+  .end-mark { text-align: center; padding: 3rem 0 4rem; font-family: var(--font-mono); font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.2em; }
+
+  @media print {
+    .slide { min-height: auto; page-break-after: always; border-bottom: none; }
+    .cover { min-height: 100vh; }
+    body { background: var(--bg); }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+
+<div class="deck">
+
+  <section class="slide cover">
+    <div class="cover-canvas-wrap"><canvas id="waveform"></canvas></div>
+    <div class="cover-top">
+      <span>Concept Dossier — Rev. 3</span>
+      <span class="mono">Rev. 2026.07.28</span>
+    </div>
+    <div class="cover-body">
+      <span class="codename">Roadie</span>
+      <h1 class="cover-title">An always-on marketing agent for independent musicians</h1>
+      <p class="cover-sub">Introducing Roadie: a lifelong marketing agent, owned and operated by you. Not just a dashboard to check — a team member you talk to, working around the clock for as long as the career runs.</p>
+    </div>
+    <div class="cover-foot">
+      <span>10 tracks · thesis, idea, mechanism, decisions log, sequence</span>
+      <span>Tip — browser print → save as PDF for a paginated copy</span>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="slide-head"><span class="idx">Track 01</span><span>The Thesis</span></div>
+    <h2 class="display-title">Find the audience. Show them the artist. Give clear ways to support them.</h2>
+    <p class="lede muted">That's the whole job. It hasn't changed since the music industry began — only the tools to do it have.</p>
+    <blockquote class="thesis-quote">
+      The soul of the music industry is taking a great artist, finding their audience, showing that audience the artist, and giving them clearly defined ways to support the artist. That's it.
+      <cite>— the founder's stated thesis for this project</cite>
+    </blockquote>
+    <div class="promise-major">
+      <span class="statement">A buddy for life — owned and operated by you.</span>
+      <p>Roadie performs that same timeless job — done by an AI agent, running continuously, using the actual tools of the modern age: Meta's algorithmic targeting, Spotify's stream count, automated creative testing. Not a manager's phone calls or a label's radio budget.</p>
+      <p>It isn't a campaign bought once. It runs indefinitely, following the artist through their entire career, putting them in control of professional-grade marketing even if they know nothing about marketing.</p>
+      <p class="muted">If the artist gets signed, they can grant their label or manager temporary, restricted access without ever losing ownership — the account stays theirs; access is a permission they grant and can revoke, not a transfer.</p>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="slide-head"><span class="idx">Track 02</span><span>The Gap</span></div>
+    <h2 class="display-title">DIY musicians have the platforms. Nobody's built the glue.</h2>
+    <p class="lede">Meta can find an audience for almost anything. Spotify hosts the fans. Neither one talks to the other — and running paid acquisition well takes a skill set most independent artists have no time to learn: account setup, audience segmentation, creative testing, budget pacing, day-to-day optimization.</p>
+    <p class="body-copy" style="color:var(--muted)">The tools already exist. What's missing is an operator that runs them continuously, on the artist's behalf, without requiring the artist to become an ad buyer.</p>
+  </section>
+
+  <section class="slide">
+    <div class="slide-head"><span class="idx">Track 03</span><span>The Pitch</span></div>
+    <h2 class="display-title">Subscribe. Set a budget. Hit go.</h2>
+    <p class="lede muted">The entire user-facing surface is three steps — everything hard happens behind it.</p>
+    <div class="three-strip">
+      <div class="strip-item">
+        <span class="tag">Input</span>
+        <h3>Connect &amp; fund</h3>
+        <p>Artist links their music, their own Meta account, and sets a monthly ad budget. No ad-manager experience required.</p>
+      </div>
+      <div class="strip-item">
+        <span class="tag">Run</span>
+        <h3>Agent works 24/7</h3>
+        <p>Continuously builds audiences, rotates creative, shifts budget toward what's working — no manual campaign babysitting.</p>
+      </div>
+      <div class="strip-item">
+        <span class="tag">Talk</span>
+        <h3>Ask Roadie anything</h3>
+        <p>A dashboard for when you want to look, and a team member you can just ask when you don't — plain language, not impressions and CPMs.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="slide-head"><span class="idx">Track 04</span><span>The Mechanism</span></div>
+    <h2 class="display-title">Two audiences, one hard rule, one soft hint.</h2>
+    <div class="pools">
+      <div class="pool-circle a">
+        <span class="pool-tag">Pool A</span>
+        <span class="pool-name">Existing fans</span>
+      </div>
+      <div class="pool-arrow">
+        <svg viewBox="0 0 70 16" fill="none"><line x1="0" y1="8" x2="60" y2="8" stroke="currentColor" stroke-width="1.2"/><path d="M55 3L62 8L55 13" stroke="currentColor" stroke-width="1.2"/></svg>
+        hard-excluded from, softly seeds
+      </div>
+      <div class="pool-circle">
+        <span class="pool-tag">Pool B</span>
+        <span class="pool-name">Potential fans</span>
+      </div>
+    </div>
+    <div class="pool-jobs">
+      <div class="pool-job">
+        <span class="k">Built from</span>
+        <p><strong style="color:var(--fg)">Pool A</strong> — page &amp; Instagram engagers, email list, site visitors. <strong style="color:var(--fg)">Pool B</strong> — a Meta Lookalike seeded from Pool A, offered to the algorithm only as a hint.</p>
+      </div>
+      <div class="pool-job">
+        <span class="k">What's actually real in 2026</span>
+        <p>Under Meta's Andromeda update, only location, minimum age, language, custom-audience <strong style="color:var(--fg)">exclusion</strong>, and Special Ad Category are hard controls — the Lookalike itself is a suggestion the algorithm can override. Decision: trust Meta's own targeting, and put the real effort into exclusion, the conversion objective, creative variety, and budget concentration instead of manual audience-picking.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="slide-head"><span class="idx">Track 05</span><span>The Test Case</span></div>
+    <h2 class="display-title">Two goals, proven on one artist first.</h2>
+    <p class="lede muted">Before this is a product for anyone, it has to work for someone.</p>
+    <div class="two-strip">
+      <div class="strip-item">
+        <span class="tag">Goal 1</span>
+        <h3>Two fan pools</h3>
+        <p>Build and grow Pool A (existing fans) and Pool B (potential fans) — the audience infrastructure everything else runs on.</p>
+      </div>
+      <div class="strip-item">
+        <span class="tag">Goal 2</span>
+        <h3>Real streaming numbers</h3>
+        <p>Not for ad revenue — for leverage. Streams become currency in rooms that don't care about impressions: label conversations, licensing, booking.</p>
+      </div>
+    </div>
+    <p class="body-copy" style="color:var(--muted)">Scope is deliberately narrow: Meta only, Spotify only, one artist's own ad account, starting from a modest existing following rather than an established fanbase — a true cold-start case, since followers aren't a Custom Audience until they've actually engaged. That narrowing removes the money-custody question entirely for phase one and forces the cold-start plan to be real, not theoretical.</p>
+  </section>
+
+  <section class="slide">
+    <div class="slide-head"><span class="idx">Track 06</span><span>The Signal Chain</span></div>
+    <h2 class="display-title">Five stages, running on a loop.</h2>
+    <div class="chain">
+      <div class="chain-stage">
+        <span class="k">Input</span>
+        <h3>Onboard</h3>
+        <p>Connect Meta &amp; Spotify, upload creative, set budget. Cold-start artists get a discovery-phase framing up front.</p>
+      </div>
+      <div class="chain-stage">
+        <span class="k">Routing</span>
+        <h3>Build pools</h3>
+        <p>Custom Audience (A) hard-excluded from cold campaigns; Lookalike (B) offered as a soft hint, not a boundary.</p>
+      </div>
+      <div class="chain-stage">
+        <span class="k">Gain</span>
+        <h3>Allocate</h3>
+        <p>Fewer, broader campaigns — not fragmented ad sets. Budget concentrates on winning creative; fatigued ads paused.</p>
+      </div>
+      <div class="chain-stage">
+        <span class="k">Monitor</span>
+        <h3>Measure</h3>
+        <p>Smart-link pixel fires a "confirmed click-through" event as the real objective; Spotify for Artists CSV export overlaid against spend for directional stream-lift.</p>
+      </div>
+      <div class="chain-stage">
+        <span class="k">Out</span>
+        <h3>Report</h3>
+        <p>Pool growth, spend, estimated lift, one kill switch.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="slide-head"><span class="idx">Track 07</span><span>Decisions Log</span></div>
+    <h2 class="display-title">What was in the way — and what we decided.</h2>
+    <div class="ledger">
+      <div class="ledger-row">
+        <div class="tag-stack"><span class="tag structural">Structural</span><span class="tag resolved">Resolved</span></div>
+        <div class="ledger-body">
+          <h3>Attribution gap</h3>
+          <p>Meta can't see past the click into Spotify, and Spotify locked down its developer API in February 2026.</p>
+          <span class="decision-k">Decision</span>
+          <p class="decision-p">A smart-link bridge page fires a Meta Pixel "confirmed click-through" event as the real optimization target — stronger than a raw ad click. Native video/ThruPlay engagement serves as a secondary, no-pixel-needed signal. Real stream numbers come from Spotify for Artists' own CSV export, uploaded periodically and overlaid against spend — shown as directional correlation, not a precise ROAS figure it can't back. Good enough, because the actual goal is leverage in real conversations, not ad ROI.</p>
+        </div>
+      </div>
+      <div class="ledger-row">
+        <div class="tag-stack"><span class="tag structural">Structural</span><span class="tag resolved">Resolved</span></div>
+        <div class="ledger-body">
+          <h3>Targeting shifted underneath the idea</h3>
+          <p>Meta cut detailed-interest categories in Jan–Feb 2026, and under the Andromeda update even Lookalike seeding is now a soft suggestion, not a hard constraint.</p>
+          <span class="decision-k">Decision</span>
+          <p class="decision-p">Trust Meta's own algorithm for the "who." Concentrate the product's effort on what's still real: hard-excluding Pool A from cold campaigns, choosing the right conversion objective, creative testing velocity, and budget concentration (fragmenting into narrow ad sets is a confirmed anti-pattern). The long-term edge is cross-artist creative-performance learning at scale, not out-targeting Meta per account.</p>
+        </div>
+      </div>
+      <div class="ledger-row">
+        <div class="tag-stack"><span class="tag gate">Gate</span><span class="tag resolved">Resolved</span></div>
+        <div class="ledger-body">
+          <h3>Rights Manager risk</h3>
+          <p>Paid ads featuring the song's actual audio can be auto-flagged even when the artist owns the track.</p>
+          <span class="decision-k">Decision</span>
+          <p class="decision-p">Static/image creative for the proof of concept — zero exposure. Video comes next, fed to Meta's Dynamic Creative / Advantage+ Creative as a varied batch, not one hero cut. Audio-inclusive video is gated on Meta Rights Manager "allowlisting," typically obtained through the artist's own distributor — action item to confirm what the founder's distributor offers.</p>
+        </div>
+      </div>
+      <div class="ledger-row">
+        <div class="tag-stack"><span class="tag gate">Gate</span><span class="tag resolved">Resolved</span></div>
+        <div class="ledger-body">
+          <h3>Cold start</h3>
+          <p>A brand-new artist has no existing engagement to seed Pool A from.</p>
+          <span class="decision-k">Decision</span>
+          <p class="decision-p">Validated against a realistic starting point — a modest existing following, well short of what's needed for a usable audience on day one. Plan: one broad engagement campaign rather than narrowly targeting a small follower base, a parallel push to convert followers into an owned email list, and holding the stream-drive campaign until Pool A is real. Early weeks are judged on audience growth and cost-per-result, not stream lift.</p>
+        </div>
+      </div>
+      <div class="ledger-row">
+        <div class="tag-stack"><span class="tag gate">Gate</span><span class="tag resolved">Resolved</span></div>
+        <div class="ledger-body">
+          <h3>Meta App Review</h3>
+          <p>Managing other artists' ad accounts requires Meta's Advanced Access review, not just a personal token.</p>
+          <span class="decision-k">Decision</span>
+          <p class="decision-p">Two parallel tracks: Business Verification (needs a registered business entity, days to weeks) and App Review for <span class="mono" style="font-size:0.85em">ads_management</span> Advanced Access (use-case writeup, screencast demo, 3–7 business days per cycle, revisions likely). The Marketing API Access Tier starts at Limited — Full Access requires 500+ prior API calls, a gate only real usage can clear. Both tracks start the moment there's a working demo, run in parallel with building, not after.</p>
+        </div>
+      </div>
+      <div class="ledger-row">
+        <div class="tag-stack"><span class="tag open">Open</span><span class="tag resolved">Resolved</span></div>
+        <div class="ledger-body">
+          <h3>Money custody + delegated access</h3>
+          <p>Pooled agency accounts are the smoothest onboarding UX but conflict with "the artist owns this for life."</p>
+          <span class="decision-k">Decision</span>
+          <p class="decision-p">Committed to artist-owned Meta Business Manager / ad accounts — never pooled under Roadie's own account. Funding is streamlined with a Stripe Issuing virtual card scoped to the artist's balance, but attached to <em>their</em> account, not Roadie's — hard spend caps without Roadie ever becoming the advertiser of record. Labels and managers get scoped, revocable access via Meta's native Business Manager Partner Access — a platform primitive, not something to build. This is what makes "ownership follows the artist for their whole career" structurally true.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="slide-head"><span class="idx">Track 08</span><span>Sequence</span></div>
+    <h2 class="display-title">Prove it small before it's a product.</h2>
+    <div class="phases">
+      <div class="phase">
+        <span class="pnum">Phase 0</span>
+        <div><h3>Personal proof of concept</h3><p>Meta + Spotify only, the artist's own ad account, static creative, a realistic cold-start position. Prove the pool mechanism, the smart-link conversion event, and the budget-allocation loop actually run.</p></div>
+      </div>
+      <div class="phase">
+        <span class="pnum">Phase 1</span>
+        <div><h3>Validate the signal</h3><p>Does confirmed click-through volume correlate with real stream lift over several weeks, checked against Spotify for Artists' CSV export.</p></div>
+      </div>
+      <div class="phase">
+        <span class="pnum">Phase 2</span>
+        <div><h3>Clear the account-access gate</h3><p>File Business Verification and Meta App Review for Advanced Access in parallel with building — budget multiple weeks including at least one revision cycle. Design the automation loop to be API-call-efficient while running on Limited Access tier.</p></div>
+      </div>
+      <div class="phase">
+        <span class="pnum">Phase 3</span>
+        <div><h3>Fund and onboard other artists</h3><p>Guided setup wizard for the artist's own Meta Business Manager, Stripe Issuing card scoped to their balance, and a Partner Access flow for granting labels/managers scoped, revocable access.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="slide-head"><span class="idx">Track 09</span><span>What's Left to Build</span></div>
+    <h2 class="display-title">The strategy is set. This is what's still unbuilt.</h2>
+    <ul class="questions">
+      <li>Confirm the actual Rights Manager allowlisting path with the artist's own distributor before audio-video creative ships.</li>
+      <li>Build the cross-artist creative-learning loop — only meaningful once there's a real client base beyond the founder.</li>
+      <li>Implement the Stripe Issuing card flow and the Partner Access delegation UI on top of Meta's native primitives.</li>
+    </ul>
+    <p class="closing-line">Every open question became a decision. What's left is building it.</p>
+    <div class="end-mark">End of dossier</div>
+  </section>
+
+</div>
+
+<script>
+  (function () {
+    var canvas = document.getElementById('waveform');
+    if (!canvas) return;
+    var ctx = canvas.getContext('2d');
+
+    function accentColor() {
+      return getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#A8672B';
+    }
+
+    function draw() {
+      var dpr = window.devicePixelRatio || 1;
+      var rect = canvas.getBoundingClientRect();
+      canvas.width = Math.max(1, rect.width * dpr);
+      canvas.height = Math.max(1, rect.height * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      var w = rect.width, h = rect.height;
+      ctx.clearRect(0, 0, w, h);
+      var mid = h * 0.62;
+      var color = accentColor();
+
+      ctx.strokeStyle = color;
+      ctx.globalAlpha = 0.22;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(0, mid);
+      ctx.lineTo(w, mid);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.globalAlpha = 0.4;
+      ctx.lineWidth = 1.25;
+      for (var x = 0; x <= w; x += 2) {
+        var t = x / w;
+        var y = mid
+          + Math.sin(t * 26 + 0.5) * h * 0.075
+          + Math.sin(t * 71 + 1.7) * h * 0.035
+          + Math.sin(t * 13.3) * h * 0.11;
+        if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+
+    draw();
+    window.addEventListener('resize', draw);
+  })();
+</script>
+
+</body>
+</html>
